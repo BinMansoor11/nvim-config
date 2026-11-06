@@ -47,6 +47,9 @@ vim.opt.autoindent = true
 vim.opt.number = true
 vim.opt.relativenumber = true
 
+vim.opt.wrap = true
+vim.opt.linebreak = true
+
 vim.opt.fillchars = {
   eob = ' ',
 }
@@ -70,7 +73,24 @@ map('n', '<C-u>', '<C-u>zz', opts)
 map('v', 'J', ":m '>+1<CR>gv=gv")
 map('v', 'K', ":m '<-2<CR>gv=gv")
 map('n', 'Q', '<nop>')
-map('n', '<leader>tr', ':term<CR>', opts)
+
+-- open a new Windows Terminal tab (same window) in Neovim's working directory.
+-- wt.exe is a Store app alias that Neovim can't start directly, so cmd.exe launches it.
+-- The new tab gets Windows Terminal's PATH, not the fixed one above, so powershell needs its full path.
+local powershell = vim.env.SystemRoot .. [[\System32\WindowsPowerShell\v1.0\powershell.exe]]
+
+local function wt_tab(...)
+  vim.fn.jobstart({ 'cmd.exe', '/c', 'wt', '-w', '0', 'new-tab', '-d', vim.fn.getcwd(), ... }, { detach = true })
+end
+
+if not vim.g.vscode then
+  map('n', '<leader>tr', function()
+    wt_tab(powershell)
+  end, { desc = 'PowerShell tab here' })
+  map('n', '<A-o>', function()
+    wt_tab(powershell, '-NoExit', '-Command', 'claude --continue')
+  end, { desc = 'Claude tab (continue)' })
+end
 
 -- Apply transparency on startup
 set_transparent()
@@ -98,9 +118,9 @@ vim.o.showmode = false
 
 -- Sync clipboard between OS and Neovim.
 -- NOTE: Will use "+y and "+p instead for a while
--- vim.schedule(function()
---   vim.o.clipboard = 'unnamedplus'
--- end)
+vim.schedule(function()
+  vim.o.clipboard = 'unnamedplus'
+end)
 
 -- Enable break indent
 vim.o.breakindent = true
@@ -221,37 +241,6 @@ end
 local rtp = vim.opt.rtp
 rtp:prepend(lazypath)
 
-local claude_buf, code_buf
-
-local function toggle_claude()
-  local cur = vim.api.nvim_get_current_buf()
-
-  -- in Claude: go back to the code you came from
-  if cur == claude_buf then
-    if code_buf and vim.api.nvim_buf_is_valid(code_buf) then
-      vim.api.nvim_set_current_buf(code_buf)
-    end
-    return
-  end
-
-  -- in code: remember it, then go to Claude
-  code_buf = cur
-  if claude_buf and vim.api.nvim_buf_is_valid(claude_buf) then
-    vim.api.nvim_set_current_buf(claude_buf)
-  else
-    vim.cmd 'terminal claude --continue'
-    claude_buf = vim.api.nvim_get_current_buf()
-  end
-end
-
-vim.keymap.set({ 'n', 't' }, '<A-o>', toggle_claude, { desc = 'Toggle Claude Code' })
-
--- start typing straight away when you return to Claude
-vim.api.nvim_create_autocmd('BufEnter', {
-  pattern = 'term://*',
-  command = 'startinsert',
-})
-
 -- [[ Configure and install plugins ]]
 --
 --  To check the current status of your plugins, run
@@ -351,6 +340,12 @@ end
 -- Keep statusline background transparent for your background image
 vim.api.nvim_set_hl(0, 'StatusLine', { bg = 'NONE' })
 vim.api.nvim_set_hl(0, 'StatusLineNC', { bg = 'NONE' })
+
+-- Windows/buffers separator line, working around for neo-tree windows behaviour
+vim.api.nvim_set_hl(0, 'WinSeparator', {
+  fg = '#151515',
+  bg = 'NONE',
+})
 
 -- VS Code (vscode-neovim): same keys, pointed at VS Code's own UI instead of the native-only plugins
 if vim.g.vscode then
