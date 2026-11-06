@@ -55,10 +55,10 @@ map('n', '<C-h>', act 'workbench.action.navigateLeft', { desc = 'Move focus left
 map('n', '<C-l>', act 'workbench.action.navigateRight', { desc = 'Move focus right' }) -- focus the editor group on the right
 map('n', '<C-j>', act 'workbench.action.navigateDown', { desc = 'Move focus down' }) -- focus the panel/group below
 map('n', '<C-k>', act 'workbench.action.navigateUp', { desc = 'Move focus up' }) -- focus the group above
-map('n', '<leader>e', act 'workbench.view.explorer', { desc = 'Explorer' }) -- neo-tree in native
+map('n', '<leader>e', act 'workbench.action.toggleSidebarVisibility', { desc = 'Explorer' }) -- neo-tree in native
 map('n', '<leader>np', act 'workbench.action.toggleCenteredLayout', { desc = 'Toggle centred layout' }) -- no-neck-pain in native
+map('n', '<leader>nz', act 'workbench.action.toggleZenMode', { desc = 'Toggle Zen Mode' })
 map('n', '<leader>qq', act 'workbench.actions.view.problems', { desc = 'Problems' }) -- diagnostic list
-map('n', '<leader>tr', act 'workbench.action.terminal.toggle', { desc = 'Terminal' }) -- toggle the terminal panel
 map('n', '<leader>bd', act 'workbench.action.closeActiveEditor', { desc = 'Close buffer' }) -- :bd leaves the tab open in VS Code
 
 -- folds: VS Code owns the folds here, Neovim knows nothing about them.
@@ -78,7 +78,8 @@ map('n', '<leader>hh', act 'workbench.action.pinEditor', { desc = 'Pin this file
 map('n', '<leader>hr', act 'workbench.action.unpinEditor', { desc = 'Unpin this file' }) -- harpoon remove
 map('n', ']h', act 'workbench.action.nextEditorInGroup', { desc = 'Next tab' }) -- harpoon next
 map('n', '[h', act 'workbench.action.previousEditorInGroup', { desc = 'Previous tab' }) -- harpoon previous
-map('n', '<leader>1', act 'workbench.action.openEditorAtIndex1', { desc = 'Tab 1' }) -- first tab, usually a pinned one
-map('n', '<leader>2', act 'workbench.action.openEditorAtIndex2', { desc = 'Tab 2' })
-map('n', '<leader>3', act 'workbench.action.openEditorAtIndex3', { desc = 'Tab 3' })
-map('n', '<leader>4', act 'workbench.action.openEditorAtIndex4', { desc = 'Tab 4' })
+for i = 1, 9 do
+  map('n', '<leader>' .. i, act('workbench.action.openEditorAtIndex' .. i), {
+    desc = 'Editor Tab ' .. i,
+  })
+end
